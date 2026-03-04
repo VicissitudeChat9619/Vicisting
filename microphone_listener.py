@@ -12,6 +12,7 @@ import pyaudio
 import numpy as np
 import json
 from typing import Optional, Callable, List
+import responser
 
 
 class MicrophoneListener:
@@ -915,6 +916,8 @@ if __name__ == "__main__":
             print(f"✅ 识别到的文本: {text}")
             # 这里可以将文本发送到消息队列、保存到文件等
             # 例如：message_queue.put(text)
+            ai_text: str = responser.ai_response(text)
+            print(f"\nVisiting:{ai_text}\n")
 
         processor.text_callback = text_callback
 
