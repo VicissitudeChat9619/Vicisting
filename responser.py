@@ -6,7 +6,7 @@ from ollama import ChatResponse
 # print(response.message.content)
 def ai_response(question: str):
     response: ChatResponse = chat(
-        model="deepseek-v3.1:671b-cloud",
+        model="minimax-m2:cloud",
         messages=[
             {
                 "role": "user",
