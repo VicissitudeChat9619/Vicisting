@@ -1,9 +1,16 @@
 from microphone_listener_producer_consumer import RealTimeSpeechRecognitionSystem
 from responser import OllamaChat
 import time
+import ai_voice
+import asyncio
 
+"""
+RealTimeSpeechRecognitionSystem:实时语音监听识别系统
+responser:ai文字相应模块
+ai_voice:ai语音模块
+asyncio:异步IO模块
+"""
 if __name__ == "__main__":
-
     chat = OllamaChat("minimax-m2.5:cloud")
     system_message: str
     with open("system_message.txt", "r", encoding="utf-8") as file:
@@ -11,11 +18,16 @@ if __name__ == "__main__":
     chat.add_system_message(f"{system_message}")
 
     def callback(text):
-        print("AI: ", end="", flush=True)
+        ai_response: str
+        print("等待回复ing：\n")
         # 使用流式输出
-        for chunk in chat.chat_stream(text, keep_history=True):
-            print(chunk, end="", flush=True)  # 实时输出每个文本块
-        print()
+        # for chunk in chat.chat_stream(text, keep_history=True):
+        #     print(chunk, end="", flush=True)  # 实时输出每个文本块
+        #     # ai_response += chunk
+        # print()
+        ai_response = chat.chat(text)
+        print(f"AI:{ai_response} ", end="\n")
+        asyncio.run(ai_voice.ai_speak(ai_response))
 
     system = RealTimeSpeechRecognitionSystem(
         queue_max_size=100,  # 消息队列最大长度
@@ -34,6 +46,7 @@ if __name__ == "__main__":
     system.start()
 
     system.set_text_callback(callback)
+
     try:
         # 主线程
         while True:
@@ -54,3 +67,8 @@ if __name__ == "__main__":
         # 停止系统
         system.stop()
         print("\n程序已退出")
+
+        # 停止ai语音
+
+        ai_voice.stop_aispeaker()
+        print("\nai语音已退出")

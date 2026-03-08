@@ -80,8 +80,12 @@ class OllamaChat:
 
         return ai_response_text
 
-    def chat_stream(self, question: str, keep_history: bool = True,
-                    callback: Optional[Callable[[str], None]] = None) -> Generator[str, None, None]:
+    def chat_stream(
+        self,
+        question: str,
+        keep_history: bool = True,
+        callback: Optional[Callable[[str], None]] = None,
+    ) -> Generator[str, None, None]:
         """
         发送对话请求（流式输出）
 
@@ -111,7 +115,7 @@ class OllamaChat:
 
         # 逐块接收响应
         for chunk in stream:
-            chunk_text = chunk['message']['content']
+            chunk_text = chunk["message"]["content"]
             full_response += chunk_text
 
             # 如果有回调函数，调用它
@@ -156,8 +160,11 @@ def ai_response(question: str, keep_history: bool = True) -> str:
     return get_chat_manager().chat(question, keep_history)
 
 
-def ai_response_stream(question: str, keep_history: bool = True,
-                       callback: Optional[Callable[[str], None]] = None) -> Generator[str, None, None]:
+def ai_response_stream(
+    question: str,
+    keep_history: bool = True,
+    callback: Optional[Callable[[str], None]] = None,
+) -> Generator[str, None, None]:
     """
     发送对话请求（流式输出）
 
