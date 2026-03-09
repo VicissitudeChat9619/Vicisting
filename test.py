@@ -1,0 +1,95 @@
+from microphone_listener_producer_consumer import RealTimeSpeechRecognitionSystem
+from responser import OllamaChat
+import time
+import ai_voice
+import asyncio
+
+"""
+RealTimeSpeechRecognitionSystem:实时语音监听识别系统
+responser:ai文字相应模块
+ai_voice:ai语音模块
+asyncio:异步IO模块
+"""
+if __name__ == "__main__":
+    chat = OllamaChat("minimax-m2.5:cloud")
+
+    # 添加系统消息
+    system_message: str
+    with open("system_message.txt", "r", encoding="utf-8") as file:
+        system_message = file.read()
+    chat.add_system_message(f"{system_message}")
+
+    # 添加与用户的对话历史
+    communication_message: str
+    with open("communication_history.txt", "r", encoding="utf-8") as file:
+        communication_message = file.read()
+    chat.add_message(role="user", content=communication_message)
+
+    def callback(text):
+        ai_response: str
+
+        print("等待回复ing：\n")
+        # 使用流式输出
+        # for chunk in chat.chat_stream(text, keep_history=True):
+        #     print(chunk, end="", flush=True)  # 实时输出每个文本块
+        #     # ai_response += chunk
+        # print()
+        ai_response = chat.chat(text)
+        print(f"AI:{ai_response} ", end="\n")
+        asyncio.run(ai_voice.ai_speak(ai_response))
+        print("写入对话记录\n")
+        with open("communication_history.txt", "a", encoding="utf-8") as file:
+            file.write(f"\n\n用户:{text}\nAI:{ai_response}")
+            print("写入完成\n")
+
+    try:
+        while True:
+            print("等待用户输入：")
+            Question = input()
+            callback(Question)
+    except KeyboardInterrupt:
+        print("\n\n收到停止信号")
+
+    # system = RealTimeSpeechRecognitionSystem(
+    #     queue_max_size=100,  # 消息队列最大长度
+    #     sample_rate=16000,
+    #     chunk_size=1024,
+    #     recognition_engine="api",  # 'whisper', 'vosk', 'api'
+    #     language="zh",
+    #     model_name="base",
+    #     silence_threshold=500,
+    #     speech_timeout=1.0,
+    #     min_speech_duration=0.5,
+    #     silence_padding=0.5,
+    #     debug=False,
+    # )
+
+    # system.start()
+
+    # system.set_text_callback(callback)
+
+    try:
+        # 主线程
+        while True:
+            time.sleep(1)
+            # # # 显示队列状态
+            # # status = system.get_queue_status()
+            # # print(
+            # #     f"\r队列状态: {status['queue_usage']} | 丢弃: {status['dropped_count']}",
+            # #     end="",
+            # #     flush=True,
+            # # )
+            pass
+    except KeyboardInterrupt:
+        print("\n\n收到停止信号")
+    finally:
+        # 最后识别一次
+        system.force_recognize()
+        # 停止系统
+        system.stop()
+        print("\n程序已退出")
+
+        # 停止ai语音
+
+        ai_voice.stop_aispeaker()
+        print("\nai语音已退出")
