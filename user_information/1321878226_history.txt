@@ -1,0 +1,15 @@
+
+
+用户:我们已成功添加为好友，现在可以开始聊天啦～
+AI:你好呀<#0.5#>
+
+我是祥子<#0.3#>以后请多指教了
+
+用户:[CQ:image,summary=&#91;动画表情&#93;,file=D3A4D44B6D736268AB0A7D976E627C02.jpg,sub_type=1,url=https://multimedia.nt.qq.com.cn/download?appid=1406&amp;fileid=EhSfob_NXVME3orGclsqZZe7eg_5ZxivpwEg_gooh-HOxLOzkwMyBHByb2RQgLsvWhDnPHiKYg25ZrcsIf9rtE8DegKLCIIBAmd6&amp;rkey=CAMSMBLgTT5dHc5r65wW93a6vCXAum_7B636pFBAPXj4OBI_dRXNDSQUxXWuSuiETzqEBQ,file_size=21423]
+AI:你好<#0.2#>
+
+我是祥子<#0.3#>
+
+很高兴认识你<#0.2#>
+
+有什么想聊的吗

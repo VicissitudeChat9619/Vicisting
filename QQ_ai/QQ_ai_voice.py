@@ -13,8 +13,11 @@ from Signal import (
     ai_speaker_stop_lock,
 )
 
+from QQapi import QQapi
+
 model = "speech-2.8-hd"
 file_format = "mp3"
+api = QQapi(ip="127.0.0.1", port=3000, token="E75-1Udr6IgoeYWQ")
 
 
 class StreamAudioPlayer:
@@ -110,7 +113,7 @@ async def start_task(websocket):
     return response.get("event") == "task_started"
 
 
-async def continue_task_with_stream_play(websocket, text, player):
+async def continue_task_with_stream_play(websocket, text):
     """Send continue request and stream play audio"""
     await websocket.send(json.dumps({"event": "task_continue", "text": text}))
 
@@ -127,25 +130,25 @@ async def continue_task_with_stream_play(websocket, text, player):
                 if audio:
                     # print(f"Playing chunk #{chunk_counter}")
                     audio_bytes = bytes.fromhex(audio)
-                    if player.play_audio_chunk(audio):
-                        total_audio_size += len(audio_bytes)
-                        audio_data += audio_bytes
-                        chunk_counter += 1
+                    # if player.play_audio_chunk(audio):
+                    total_audio_size += len(audio_bytes)
+                    audio_data += audio_bytes
+                    chunk_counter += 1
 
             if response.get("is_final"):
                 # print(f"Audio synthesis completed: {chunk_counter-1} chunks")
-                if player.mpv_process and player.mpv_process.stdin:
-                    player.mpv_process.stdin.close()
+                # if player.mpv_process and player.mpv_process.stdin:
+                #     player.mpv_process.stdin.close()
 
                 # Save audio to file
-                # with open(f"output.{file_format}", "wb") as f:
-                #     f.write(audio_data)
+                with open(f"output.{file_format}", "wb") as f:
+                    f.write(audio_data)
                 # print(f"Audio saved as output.{file_format}")
 
                 estimated_duration = total_audio_size * 0.0625 / 1000
                 wait_time = max(estimated_duration + 5, 10)
-                return wait_time
-
+                return f"E:\\Vicisting\\output.{file_format}"
+        # "E:\\Vicisting\\output.mp3"
         except Exception as e:
             print(f"Error: {e}")
             break
@@ -182,19 +185,17 @@ async def close_connection(websocket):
 #     pass
 
 
-async def ai_speak(TEXT):
+async def ai_speak(TEXT, user_id):
     # print("ai_speak")
     API_KEY = os.getenv("MINIMAX_API_KEY")
     # MPV_PATH = os.getenv("MPV_PATH")
     if not API_KEY:
         raise Exception("API_KEY not found")
-    player = StreamAudioPlayer()
-    player.mpv_path = "E:\\mpvplayer\\mpv.exe"
+    # player = StreamAudioPlayer()
+    # player.mpv_path = "E:\\mpvplayer\\mpv.exe"
     # TEXT = "真正的危险不是计算机开始像人一样思考(sighs)，而是人开始像计算机一样思考。计算机只是可以帮我们处理一些简单事务。"
     # print(API_KEY)
     try:
-        if not player.start_mpv():
-            return
 
         ws = await establish_connection(API_KEY)
 
@@ -205,19 +206,20 @@ async def ai_speak(TEXT):
             print("Task startup failed")
             return
 
-        wait_time = await continue_task_with_stream_play(ws, TEXT, player)
+        audio_path = await continue_task_with_stream_play(ws, TEXT)
+        api.send_friend_audio(user_id, audio_path)
         # await asyncio.sleep(wait_time)
 
     except Exception as e:
         print(f"Error: {e}")
     finally:
-        player.stop()
         if "ws" in locals():
             await close_connection(ws)
             # print("end!\n")
 
 
 ai_response = ""
+user_id = ""
 
 
 class speaker_thread(threading.Thread):
@@ -226,6 +228,7 @@ class speaker_thread(threading.Thread):
 
     def run(self):
         global ai_response
+        global user_id
         while True:
             ai_speaker_stop_lock.acquire()
             if ai_speaker_stop:
@@ -235,8 +238,9 @@ class speaker_thread(threading.Thread):
             ai_response_lock.acquire()
             if ai_response != "":
                 text = ai_response
+                _id = user_id
                 ai_response_lock.release()
-                asyncio.run(ai_speak(text))
+                asyncio.run(ai_speak(text, _id))
                 time.sleep(1)
                 ai_response = ""
             ai_response_lock.release()
