@@ -87,11 +87,15 @@ class QQMessageMonitor:
         # 尝试打开历史记录获得用户聊天记录
         try:
             with open(
-                f".\\user_information\\{user_id}_history.txt", "r", encoding="utf-8"
+                f".\\QQ_ai\\user_information\\{user_id}_history.txt",
+                "r",
+                encoding="utf-8",
             ) as file:
                 user_history = file.read()
         except FileNotFoundError:
-            with open(f".\\user_information\\{user_id}_history.txt", "a") as file:
+            with open(
+                f".\\QQ_ai\\user_information\\{user_id}_history.txt", "a"
+            ) as file:
                 pass
         if message_type == "private":
             ai_message.ask_for_private_ai_response(

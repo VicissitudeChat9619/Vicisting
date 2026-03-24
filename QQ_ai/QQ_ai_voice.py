@@ -20,52 +20,52 @@ file_format = "mp3"
 api = QQapi(ip="127.0.0.1", port=3000, token="E75-1Udr6IgoeYWQ")
 
 
-class StreamAudioPlayer:
-    def __init__(self):
-        self.mpv_process = None
-        self.mpv_path: str
+# class StreamAudioPlayer:
+#     def __init__(self):
+#         self.mpv_process = None
+#         self.mpv_path: str
 
-    def start_mpv(self):
-        """Start MPV player process"""
-        try:
-            mpv_command = [self.mpv_path, "--no-cache", "--no-terminal", "--", "fd://0"]
-            self.mpv_process = subprocess.Popen(
-                mpv_command,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-            # print("MPV player started")
-            return True
-        except FileNotFoundError:
-            print("Error: mpv not found. Please install mpv")
-            return False
-        except Exception as e:
-            print(f"Failed to start mpv: {e}")
-            return False
+#     def start_mpv(self):
+#         """Start MPV player process"""
+#         try:
+#             mpv_command = [self.mpv_path, "--no-cache", "--no-terminal", "--", "fd://0"]
+#             self.mpv_process = subprocess.Popen(
+#                 mpv_command,
+#                 stdin=subprocess.PIPE,
+#                 stdout=subprocess.DEVNULL,
+#                 stderr=subprocess.DEVNULL,
+#             )
+#             # print("MPV player started")
+#             return True
+#         except FileNotFoundError:
+#             print("Error: mpv not found. Please install mpv")
+#             return False
+#         except Exception as e:
+#             print(f"Failed to start mpv: {e}")
+#             return False
 
-    def play_audio_chunk(self, hex_audio):
-        """Play audio chunk"""
-        try:
-            if self.mpv_process and self.mpv_process.stdin:
-                audio_bytes = bytes.fromhex(hex_audio)
-                self.mpv_process.stdin.write(audio_bytes)
-                self.mpv_process.stdin.flush()
-                return True
-        except Exception as e:
-            print(f"Play failed: {e}")
-            return False
-        return False
+#     def play_audio_chunk(self, hex_audio):
+#         """Play audio chunk"""
+#         try:
+#             if self.mpv_process and self.mpv_process.stdin:
+#                 audio_bytes = bytes.fromhex(hex_audio)
+#                 self.mpv_process.stdin.write(audio_bytes)
+#                 self.mpv_process.stdin.flush()
+#                 return True
+#         except Exception as e:
+#             print(f"Play failed: {e}")
+#             return False
+#         return False
 
-    def stop(self):
-        """Stop player"""
-        if self.mpv_process:
-            if self.mpv_process.stdin and not self.mpv_process.stdin.closed:
-                self.mpv_process.stdin.close()
-            try:
-                self.mpv_process.wait(timeout=20)
-            except subprocess.TimeoutExpired:
-                self.mpv_process.terminate()
+#     def stop(self):
+#         """Stop player"""
+#         if self.mpv_process:
+#             if self.mpv_process.stdin and not self.mpv_process.stdin.closed:
+#                 self.mpv_process.stdin.close()
+#             try:
+#                 self.mpv_process.wait(timeout=20)
+#             except subprocess.TimeoutExpired:
+#                 self.mpv_process.terminate()
 
 
 async def establish_connection(api_key):
@@ -113,7 +113,7 @@ async def start_task(websocket):
     return response.get("event") == "task_started"
 
 
-async def continue_task_with_stream_play(websocket, text):
+async def continue_task_with_stream_play(websocket, text, user_id):
     """Send continue request and stream play audio"""
     await websocket.send(json.dumps({"event": "task_continue", "text": text}))
 
@@ -136,19 +136,18 @@ async def continue_task_with_stream_play(websocket, text):
                     chunk_counter += 1
 
             if response.get("is_final"):
-                # print(f"Audio synthesis completed: {chunk_counter-1} chunks")
-                # if player.mpv_process and player.mpv_process.stdin:
-                #     player.mpv_process.stdin.close()
-
                 # Save audio to file
-                with open(f"output.{file_format}", "wb") as f:
+                localpath = os.getcwd()
+                with open(
+                    f"{localpath}\\QQ_ai\\user_mp3\\output_to_{user_id}.{file_format}",
+                    "wb",
+                ) as f:
                     f.write(audio_data)
-                # print(f"Audio saved as output.{file_format}")
-
                 estimated_duration = total_audio_size * 0.0625 / 1000
                 wait_time = max(estimated_duration + 5, 10)
-                return f"E:\\Vicisting\\output.{file_format}"
-        # "E:\\Vicisting\\output.mp3"
+                return (
+                    f"{localpath}\\QQ_ai\\user_mp3\\output_to_{user_id}.{file_format}"
+                )
         except Exception as e:
             print(f"Error: {e}")
             break
@@ -186,9 +185,8 @@ async def close_connection(websocket):
 
 
 async def ai_speak(TEXT, user_id):
-    # print("ai_speak")
+    # 从环境变量获取API_KEY
     API_KEY = os.getenv("MINIMAX_API_KEY")
-    # MPV_PATH = os.getenv("MPV_PATH")
     if not API_KEY:
         raise Exception("API_KEY not found")
     # player = StreamAudioPlayer()
@@ -206,9 +204,8 @@ async def ai_speak(TEXT, user_id):
             print("Task startup failed")
             return
 
-        audio_path = await continue_task_with_stream_play(ws, TEXT)
+        audio_path = await continue_task_with_stream_play(ws, TEXT, user_id)
         api.send_friend_audio(user_id, audio_path)
-        # await asyncio.sleep(wait_time)
 
     except Exception as e:
         print(f"Error: {e}")

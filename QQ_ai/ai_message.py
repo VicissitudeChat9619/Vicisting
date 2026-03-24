@@ -24,7 +24,7 @@ def ask_for_private_ai_response(
     chat = OllamaChat("minimax-m2.5:cloud")
     # 添加系统消息
     system_message: str
-    with open(".\\QQ\\system_message.md", "r", encoding="utf-8") as file:
+    with open(".\\QQ_ai\\system_message.md", "r", encoding="utf-8") as file:
         system_message = file.read()
     chat.add_system_message(f"{system_message}")
     # 添加与用户的对话历史
@@ -34,13 +34,10 @@ def ask_for_private_ai_response(
     def callback(text):
         global ai_response
         ai_response = ""
-        # print("thinking：\n")
         # 使用流式输出
-        # print("AI:", end="")
         for chunk in chat.chat_stream(text, keep_history=True):
             # print(chunk, end="", flush=True)  # 实时输出每个文本块
             ai_response += chunk
-        # print()
         # 将生成的ai响应同步到ai_voice中的ai_response,并提供用户id
         QQ_ai_voice.ai_response_lock.acquire()
         QQ_ai_voice.ai_response = ai_response
@@ -48,7 +45,7 @@ def ask_for_private_ai_response(
         QQ_ai_voice.ai_response_lock.release()
         # print("写入对话记录\n")
         with open(
-            f".\\user_information\\{user_id}_history.txt", "a", encoding="utf-8"
+            f".\\QQ_ai\\user_information\\{user_id}_history.txt", "a", encoding="utf-8"
         ) as file:
             file.write(f"\n\n用户:{text}\nAI:{ai_response}")
             # print("写入完成\n")
