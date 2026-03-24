@@ -87,9 +87,9 @@ if __name__ == "__main__":
         print()
 
         # 将生成的ai响应同步到ai_voice中的ai_response
-        ai_voice.ai_response_lock.acquire()
-        ai_voice.ai_response = ai_response
-        ai_voice.ai_response_lock.release()
+        QQ_ai_voice.ai_response_lock.acquire()
+        QQ_ai_voice.ai_response = ai_response
+        QQ_ai_voice.ai_response_lock.release()
 
         # print("写入对话记录\n")
         with open("communication_history.txt", "a", encoding="utf-8") as file:
