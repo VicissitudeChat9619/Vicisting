@@ -83,24 +83,12 @@ class QQMessageMonitor:
         self, user_id: int, message: str, full_data: dict, message_type: str
     ):
         """消息回调函数，可重写"""
-        user_history = ""
-        # 尝试打开历史记录获得用户聊天记录
-        try:
-            with open(
-                f".\\QQ_ai\\user_information\\{user_id}_history.txt",
-                "r",
-                encoding="utf-8",
-            ) as file:
-                user_history = file.read()
-        except FileNotFoundError:
-            with open(
-                f".\\QQ_ai\\user_information\\{user_id}_history.txt", "a"
-            ) as file:
-                pass
         if message_type == "private":
-            ai_message.ask_for_private_ai_response(
-                user_id, message, full_data, user_history
-            )
+            p = ai_message.ai_responser_thread(user_id, message)
+            p.start()
+            # ai_message.ask_for_private_ai_response(user_id, message, full_data)
+        elif message_type == "group":
+            ai_message.ask_for_group_ai_response(user_id, message, full_data)
         else:
             pass
             # ai_message.ask_for_group_ai_response()

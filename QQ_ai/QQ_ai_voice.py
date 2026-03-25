@@ -11,8 +11,10 @@ from Signal import (
     user_text_lock,
     ai_speaker_stop,
     ai_speaker_stop_lock,
+    ai_response_items,
+    ai_response_space,
 )
-
+import queue
 from QQapi import QQapi
 
 model = "speech-2.8-hd"
@@ -215,32 +217,28 @@ async def ai_speak(TEXT, user_id):
             # print("end!\n")
 
 
-ai_response = ""
-user_id = ""
+ai_response = queue.Queue()
+user_id = queue.Queue()
 
 
 class speaker_thread(threading.Thread):
     def __init__(self):
         super().__init__()
+        self.daemon = True
 
     def run(self):
         global ai_response
         global user_id
         while True:
-            ai_speaker_stop_lock.acquire()
-            if ai_speaker_stop:
-                ai_speaker_stop_lock.release()
-                break
-            ai_speaker_stop_lock.release()
-            ai_response_lock.acquire()
-            if ai_response != "":
-                text = ai_response
-                _id = user_id
-                ai_response_lock.release()
-                asyncio.run(ai_speak(text, _id))
-                time.sleep(1)
-                ai_response = ""
-            ai_response_lock.release()
+            ai_response_items.acquire()  # 等待队列有数据
+            ai_response_lock.acquire()  # 获得ai_response队列的锁
+            text = ai_response.get()
+            _id = user_id.get()
+            ai_response_lock.release()  # 释放ai_response队列的锁
+            ai_response_space.release()  # 释放队列容量
+
+            asyncio.run(ai_speak(text, _id))
+            time.sleep(1)
         print("speak_thread dead")
 
 
